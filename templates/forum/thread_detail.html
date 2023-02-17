@@ -1,0 +1,21 @@
+{% extends 'index.html' %}
+{% block title %}<h2>{{ thread.title }}</h2>{% endblock title %}
+{% block url_title %}Форум-{{ category.name }}{% endblock url_title %}
+{% block content %}
+<ul>
+{% for post in page_obj %}
+    <li>{{ post.body }}</li>
+{% endfor %}
+</ul>
+<div>
+    {% if page_obj.has_previous %}
+        <a href="{% url 'forum:thread_detail' thread.id page_number=page_obj.previous_page_number %}">Previous</a>
+    {% endif %}
+    {% if page_obj.has_next %}
+        <a href="{% url 'forum:thread_detail' thread.id page_number=page_obj.next_page_number %}">Next</a>
+    {% endif %}
+</div>
+<div>
+    <a href="{% url 'forum:reply_thread' thread.id %}">Reply</a>
+</div>
+{% endblock content %}

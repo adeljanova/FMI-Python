@@ -1,0 +1,16 @@
+{% extends 'index.html' %}
+{% block title %}Профил{% endblock title %}
+{% block url_title %}Profile{% endblock url_title %}
+{% block content %}
+    <p>Age: {{ fitness_profile.age }}</p>
+    <p>Weight: {{ fitness_profile.weight }}</p>
+    <p>Height: {{ fitness_profile.height }}</p>
+    <p>Goal: {{ fitness_profile.goal }}</p>
+    <p>Bio: {{ fitness_profile.bio }}</p>
+    <form action="{% url 'accounts:bmi_calculator' %}" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Calculate BMI">
+</form>
+{% endblock content %}
+

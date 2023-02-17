@@ -1,0 +1,68 @@
+{% extends 'index.html' %}
+{% block title %}
+    <h2>Следи храната си</h2>
+{% endblock title %}
+
+{% block content %}
+    {% for food_item in food_items %}
+        <section class="py-5">
+            <div class="container px-4 px-lg-5 mt-5">
+                <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+                    <div class="col mb-5">
+                        <div class="card h-100">
+                            <!-- Product image-->
+{#                            <img class="img-fluid mx-auto d-block" width="200px" height="100px" alt="Responsive image"#}
+{#                                 src="{{ product.image.url }}">#}
+                            <div class="text-center">
+                                <div class="card-body">
+                                    <p class="card-text">
+                                        <a class="text-dark text-decoration-none"
+                                           href="{{ food_item.get_absolute_url }}">{{ food_item.type_item }}</a>
+                                    </p>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center"></div>
+                            </div>
+                            <!-- Product details-->
+                            <div class="card-body p-4">
+                                <div class="text-center">
+                                    <h5 class="fw-bolder">{{ food_item.name }}</h5>
+                                    <h5 class="fw-bolder">{{ food_item.calories }}</h5>
+                                    <h5 class="fw-bolder">{{ food_item.proteins }}</h5>
+                                    <h5 class="fw-bolder">{{ food_item.carbohydrates }}</h5>
+                                    <h5 class="fw-bolder">{{ food_item.fats }}</h5>
+                                </div>
+                            </div>
+                            <!-- Product actions-->
+{#                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">#}
+{#                                <div class="text-center"><a class="btn btn-outline-dark mt-auto">#}
+{#                                    <button id="add-button" value="{{ food_item.id }}">Добави за деня</button>#}
+{#                                </a>#}
+{#                                </div>#}
+{#                            </div>#}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {% endfor %}
+    <script>
+        $(document).on('click', '#add-button', function (e) {
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: '{% url "store_basket:basket_add" %}',
+                data: {
+                    productid: $('#add-button').val(),
+                    productqty: $('#select option:selected').text(),
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                    action: 'post'
+                },
+                success: function (json) {
+                    document.getElementById("basket-qty").innerHTML = json.qty
+                },
+                error: function (xhr, errmsg, err) {
+                }
+            });
+        })
+    </script>
+{% endblock content %}

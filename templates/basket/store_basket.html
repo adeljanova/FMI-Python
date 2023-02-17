@@ -1,0 +1,154 @@
+{% extends 'index.html' %}
+{% block title %}Количка{% endblock title %}
+{% block url_title %}Basket{% endblock url_title %}
+{% block content %}
+    <main class="pt-5">
+        <div class="container">
+            <h1 class="h1">Количка</h1>
+            {% for item in basket %}
+                {% with product=item.product %}
+                    <div data-index="{{ product.id }}" class="row mb-4 border product-item">
+                        <div class="col-md-3 col-lg-2 order-md-first bg-light">
+                            <img class="img-fluid mx-auto d-block" width="200px" height="200px" alt="Responsive image"
+                                 src="{{ product.image.url }}">
+                        </div>
+                        <div class="col-md-9 col-lg-10 ps-md-3 ps-lg-10">
+                            <a href="{{ product.get_absolute_url }}" class="text-decoration-none text-reset">
+                                <h1 class="h5 pt-2">{{ product.title }}</h1>
+                            </a>
+                            <div class="border">
+                                <div class="col border-bottom">
+                                    <div class="row p-3">
+                                        <div class="col-6">Цена:</div>
+                                        <div class="col-6 text-end"><span
+                                                class="h6 fw-bold">{{ product.price }}лв.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row p-3">
+                                        <div class="col-12">
+                                            <label for="select">Количество:</label>
+                                            <select id="select{{ product.id }}">
+                                                <option selected>
+                                                    {{ item.qty }}
+                                                </option>
+                                                <option value="">1</option>
+                                                <option value="">2</option>
+                                                <option value="">3</option>
+                                                <option value="">4</option>
+                                            </select>
+                                            <button type="button" id="update-button" data-index="{{ product.id }}"
+                                                    class="btn btn-outline-secondary btn-sm update-button">
+                                                Aктуализация
+                                            </button>
+                                            <button type="button" id="delete-button" data-index="{{ product.id }}"
+                                                    class="btn btn-outline-secondary btn-sm delete-button">
+                                                Изтриване
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endwith %}
+            {% endfor %}
+            <div class="col-12 text-end">
+                <div class="h6 fw-bold">Обща цена:
+                    <div id="subtotal" class="d-inline-flex">{{ basket.get_total_price }}лв.</div>
+                </div>
+            </div>
+            <div class="col-12 text-end">
+                <div class="h4 fw-bold">
+                    <div id="paypal-button-container">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        $(document).on('click', '.update-button', function (e) {
+            e.preventDefault();
+            var prodid = $(this).data('index');
+            $.ajax({
+                type: 'POST',
+                url: '{% url 'store_basket:basket_update' %}',
+                data: {
+                    productid: $(this).data('index'),
+                    productqty: $('#select' + prodid + ' option:selected').text(),
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    action: 'post'
+                },
+                success: function (json) {
+                    document.getElementById('basket-qty').innerHTML = json.qty
+                    document.getElementById('subtotal').innerHTML = json.subtotal
+                },
+                error: function (xhr, errmsg, err) {
+                }
+            });
+        })
+
+
+        $(document).on('click', '.delete-button', function (e) {
+            e.preventDefault();
+            var prodid = $(this).data('index');
+            $.ajax({
+                type: 'POST',
+                url: '{% url 'store_basket:basket_delete' %}',
+                data: {
+                    productid: $(this).data('index'),
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    action: 'post'
+                },
+                success: function (json) {
+                    $('.product-item[data-index="' + prodid + '"]').remove();
+                    document.getElementById('subtotal').innerHTML = json.subtotal;
+                    document.getElementById('basket-qty').innerHTML = json.qty
+                },
+                error: function (xhr, errmsg, err) {
+                }
+            });
+        })
+
+    </script>
+
+
+    <script src="https://www.paypal.com/sdk/js?client-id=AZuvPDOLHEnaauqKVhav2jivF4Pkwh2bCr-1EieXWTXZGFIo1G2Tf2k6ESyBQX4SOxNsGVd5zIoUFCoh&currency=USD"></script>
+
+    <script>
+        // Render the PayPal button into #paypal-button-container
+        paypal.Buttons({
+
+            // Set up the transaction
+            createOrder: function (data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: '{{ basket.get_total_price }}'
+                        }
+                    }]
+                });
+            },
+
+            // Finalize the transaction
+            onApprove: function (data, actions) {
+                return actions.order.capture().then(function (orderData) {
+                    // Successful capture! For demo purposes:
+                    console.log('Capture result', orderData, JSON.stringify(orderData, null, 2));
+                    var transaction = orderData.purchase_units[0].payments.captures[0];
+                    alert('Transaction ' + transaction.status + ': ' + transaction.id + '\n\nSee console for all available details');
+
+
+                    // Replace the above to show a success message within this page, e.g.
+                     {#const element = document.getElementById('paypal-button-container');#}
+                     {#element.innerHTML = '';#}
+                     {#element.innerHTML = '<h3>Thank you for your payment!</h3>';#}
+                    // Or go to another URL:
+                     //actions.redirect('thank_you.html');
+                });
+            }
+        }).render('#paypal-button-container');
+    </script>
+{% endblock content %}
